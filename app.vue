@@ -57,10 +57,18 @@
             <tbody>
               <tr v-for="(competitor, index) in currentGroup.competitors" :key="index" class="border">
                 <td class="p-1 border-r">
-                  <div class="w-40 truncate overflow-hidden" :title="competitor.competitors_name">{{ competitor.competitors_name }}</div>
+                  <UInput v-model="competitor.competitors_name" class="text-xs" />
+                  <!--
+                  <div class="w-40 truncate overflow-hidden" :title="competitor.competitors_name">
+                    {{ competitor.competitors_name }}
+                  </div>-->
                 </td>
                 <td class="p-1 border-r">
-                  <div class="w-20 truncate overflow-hidden" :title="competitor.country">{{ competitor.country }}</div>
+                  <UInput v-model="competitor.country" class="text-xs" />
+                  <!--
+                  <div class="w-20 truncate overflow-hidden" :title="competitor.country">
+                    {{ competitor.country }}
+                  </div>-->
                 </td>
                 <td class="border-r p-1">
                   <UInput v-model="competitor.judging" class="text-xs" />
