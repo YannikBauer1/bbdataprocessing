@@ -1,53 +1,53 @@
 <template>
   <div class="container px-6 pb-8">
     <div class="title text-2xl text-center py-4">
-      <div class="mb-2">Bodybuilding Data Processing</div>
-      <input type="file" @change="handleFileUpload" accept=".csv" class="border text-sm" />
+      <div class="mb-2">Bodybuilding Data Verification</div>
+      <!--
+      <input type="file" @change="handleFileUpload" accept=".csv" class="border text-sm" />-->
     </div>
 
-    <div v-if="groupedData && groupedData.length">
+    <div v-if="file.length > 0 && !loading && !error">
       <div class="mb-4 flex justify-between">
-        <div>
-          <UButton @click="goBack" :disabled="currentIndex === 0" class="text-xs mr-2">
-            Back
-          </UButton>
-          <UButton @click="goNext" :disabled="currentIndex === groupedData.length - 1" class="text-xs mr-2">
-            Next
-          </UButton>
-          <span class="mr-2">
-            {{ currentIndex + 1 }} / {{ groupedData.length }}
-          </span>
+        <UButton class="text-xs mr-2" disabled>
+          Check corrected Files
+        </UButton>
+        <div class="border-2 border-solid border-yellow-500 px-2 py-1 rounded">
+          Files to correct: <span class="font-bold text-yellow-500">{{ files.length }}</span>
         </div>
-        <div>
-          <UButton @click="exportCSV" class="text-xs">
-            Export CSV
-          </UButton>
-        </div>
+        <UButton class="text-xs" @click="saveFile">
+          Save File
+        </UButton>
       </div>
-      <!--test sth-->
 
       <div class="flex flex-col lg:flex-row">
         <div class="w-full lg:w-1/2 pr-0 lg:pr-4 mb-4 lg:mb-0">
-          <img :src="currentGroup.img_url" alt="Competition Image" class="competition-image w-full h-auto object-cover rounded" />
+          <img :src="image_url" alt="Competition Image"
+            class="competition-image w-full h-auto object-cover rounded" />
         </div>
         <div class="w-full lg:w-1/2 pl-0 lg:pl-4">
-          <h2 class="text-lg font-semibold mb-2">Competition Details:</h2>
-          <table class="mb-4 w-full table-auto">
+          <table class="mb-4 w-full table-auto text-sm">
             <tbody>
-              <tr v-for="(value, key) in competitionDetails" :key="key">
-                <td class="key font-medium pr-2">{{ formatHeader(key) }}:</td>
-                <td class="value">{{ value }}</td>
+              <tr>
+                <td class="key font-medium w-28">Competition:</td>
+                <td class="value"><UInput v-model="competition" size="2xs"/></td>
+              </tr>
+              <tr>
+                <td class="key font-medium">Location:</td>
+                <td class="value"><UInput v-model="location" size="2xs"/></td>
+              </tr>
+              <tr>
+                <td class="key font-medium">Date:</td>
+                <td class="value"><UInput v-model="date" size="2xs"/></td>
               </tr>
             </tbody>
           </table>
 
-          <h3 class="competitors-title text-lg font-semibold mb-2">Competitors:</h3>
           <table class="text-sm w-full table-auto border-collapse">
             <thead>
-              <tr class="border">
-                <th class="border-r p-1">Competitor Name</th>
+              <tr class="border text-xs">
+                <th class="border-r p-1">Athlete</th>
                 <th class="border-r p-1">Country</th>
-                <th class="border-r p-1">Judging</th>
+                <th class="border-r p-1">PreJu</th>
                 <th class="border-r p-1">Finals</th>
                 <th class="border-r p-1">Total</th>
                 <th class="border-r p-1">Place</th>
@@ -55,35 +55,27 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(competitor, index) in currentGroup.competitors" :key="index" class="border">
+              <tr v-for="(competitor, index) in file" :key="index" class="border">
                 <td class="p-1 border-r">
-                  <UInput v-model="competitor.competitors_name" class="text-xs" />
-                  <!--
-                  <div class="w-40 truncate overflow-hidden" :title="competitor.competitors_name">
-                    {{ competitor.competitors_name }}
-                  </div>-->
+                  <UInput v-model="competitor.competitors_name" size="2xs"/>
                 </td>
                 <td class="p-1 border-r">
-                  <UInput v-model="competitor.country" class="text-xs" />
-                  <!--
-                  <div class="w-20 truncate overflow-hidden" :title="competitor.country">
-                    {{ competitor.country }}
-                  </div>-->
+                  <UInput v-model="competitor.country" size="2xs"/>
+                </td>
+                <td class="border-r p-1 w-12">
+                  <UInput v-model="competitor.judging" size="2xs"/>
+                </td>
+                <td class="border-r p-1 w-12">
+                  <UInput v-model="competitor.finals" size="2xs"/>
+                </td>
+                <td class="border-r p-1 w-12">
+                  <UInput v-model="competitor.total" size="2xs"/>
+                </td>
+                <td class="border-r p-1 w-12">
+                  <UInput v-model="competitor.place" size="2xs"/>
                 </td>
                 <td class="border-r p-1">
-                  <UInput v-model="competitor.judging" class="text-xs" />
-                </td>
-                <td class="border-r p-1">
-                  <UInput v-model="competitor.finals" class="text-xs" />
-                </td>
-                <td class="border-r p-1">
-                  <UInput v-model="competitor.total" class="text-xs" />
-                </td>
-                <td class="border-r p-1">
-                  <UInput v-model="competitor.place" class="text-xs" />
-                </td>
-                <td class="border-r p-1">
-                  <div class="w-20 truncate overflow-hidden" :title="competitor.competition_type">{{ competitor.competition_type }}</div>
+                  <UInput v-model="competitor.competition_type" size="2xs"/>
                 </td>
               </tr>
             </tbody>
@@ -92,160 +84,188 @@
       </div>
     </div>
 
-    <div v-else-if="fileError" class="mt-4 text-center">
-      <p class="text-red-500">{{ fileError }}</p>
+    <div v-else-if="file.length === 0 && !loading && !error" class="my-6 text-center">
+      <p>No files to correct</p>
+    </div>
+
+    <div v-else-if="loading && !error" class="my-6 text-center">
+      <p>Loading...</p>
+    </div>
+
+    <div v-else-if="error" class="mt-4 text-center">
+      <p class="text-red-500">Error</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Papa from 'papaparse';
+import { supabase } from '~/utils/supabase';
 
-// Reactive references to hold CSV data and grouped data
-const csvData = ref([]);
-const groupedData = ref([]);
-const fileError = ref('');
+const baseUrl = "https://qesnrciwmhxfhdaojwwo.supabase.co/storage/v1/object/public/pipeline/jsons-fromGPT/"
+const imageBaseUrl = "https://qesnrciwmhxfhdaojwwo.supabase.co/storage/v1/object/public/resultImages/"
 
-// Reactive reference for current index
-const currentIndex = ref(0);
+const files = ref([]);
+const file = ref([])
+const image_url = ref('');
+const competition = ref('');
+const location = ref('');
+const date = ref('');
 
-// Computed property to get the current group based on currentIndex
-const currentGroup = computed(() => {
-  return groupedData.value[currentIndex.value] || {};
+const loading = ref(false);
+const error = ref(false)
+
+onMounted(async () => {
+  await myFetch();
 });
 
-// Computed property to extract competition-level details from the first competitor
-const competitionDetails = computed(() => {
-  if (currentGroup.value.competitors && currentGroup.value.competitors.length > 0) {
-    const { competition, location, date, url } = currentGroup.value.competitors[0];
-    return { competition, location, date, url };
+const myFetch = async () => {
+  loading.value = true;
+  try {
+    await fetchData();
+  } catch (error) {
+    console.error(error);
+    error.value = true;
+  } finally {
+    loading.value = false;
   }
-  return {};
-});
+};
 
-// Function to handle file upload
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  fileError.value = ''; // Reset any previous errors
-  csvData.value = []; // Reset previous data
-  groupedData.value = [];
-  currentIndex.value = 0;
-
-  if (!file) {
-    fileError.value = 'No file selected.';
-    return;
-  }
-
-  if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-    fileError.value = 'Please upload a valid CSV file.';
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    const csvContent = e.target.result;
-
-    Papa.parse(csvContent, {
-      header: true, // Treat the first row as headers
-      skipEmptyLines: true, // Skip empty lines
-      complete: (results) => {
-        if (results.errors.length) {
-          fileError.value = 'Error parsing CSV file.';
-          console.error('PapaParse Errors:', results.errors);
-        } else {
-          csvData.value = results.data;
-          // Check if 'img_url' exists
-          if (!results.meta.fields.includes('img_url')) {
-            fileError.value = 'CSV must contain "img_url" field.';
-            csvData.value = [];
-            return;
-          }
-          groupDataByImage();
-        }
-      },
-      error: (error) => {
-        fileError.value = 'Failed to parse CSV file.';
-        console.error('PapaParse Error:', error);
-      },
-    });
-  };
-
-  reader.onerror = () => {
-    fileError.value = 'Failed to read file.';
-  };
-
-  reader.readAsText(file);
-}
-
-// Function to group CSV data by img_url
-function groupDataByImage() {
-  const groups = {};
-
-  csvData.value.forEach((row) => {
-    const imgUrl = row.img_url;
-    if (!groups[imgUrl]) {
-      groups[imgUrl] = {
-        img_url: imgUrl,
-        competitors: [],
-      };
-    }
-    groups[imgUrl].competitors.push(row);
+const fetchData = async () => {
+  const { data: subfolders, error: subfoldersError } = await supabase.storage.from("pipeline").list("jsons-fromGPT", {
+    limit: 100,
+    offset: 0,
+    sortBy: { column: 'name', order: 'asc' },
   });
+  if (subfoldersError) throw new Error(subfoldersError.message);
 
-  // Convert the groups object into an array
-  groupedData.value = Object.values(groups);
-}
+  for (const folder of subfolders) {
+    let { data: fromGPTData, error: fromGPTError } = await supabase.storage.from("pipeline").list(`jsons-fromGPT/${folder.name}`, {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (fromGPTError) throw new Error(fromGPTError.message);
 
-// Navigation functions
-function goNext() {
-  if (currentIndex.value < groupedData.value.length - 1) {
-    currentIndex.value += 1;
+    let { data: cleanData, error: cleanError } = await supabase.storage.from("pipeline").list(`jsons-clean/${folder.name}`, {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (cleanError) throw new Error(cleanError.message);
+    fromGPTData = fromGPTData.filter(file => file.name != ".emptyFolderPlaceholder");
+    cleanData = cleanData.filter(file => file.name != ".emptyFolderPlaceholder");
+
+    const cleanFileNames = cleanData.map(file => file.name);
+
+    for (const file of fromGPTData) {
+      if (!cleanFileNames.includes(file.name)) {
+        const publicURL = baseUrl + `/${folder.name}/` + file.name;
+        files.value.push(publicURL);
+      }
+    }
   }
-}
-
-function goBack() {
-  if (currentIndex.value > 0) {
-    currentIndex.value -= 1;
+  console.log(files.value); 
+  if (files.value.length > 0) {
+    await addFile();
   }
-}
+};
 
-// Utility function to format headers (e.g., replace underscores with spaces and capitalize)
-function formatHeader(header) {
-  const headersToDisplay = {
-    competition: 'Competition',
-    location: 'Location',
-    date: 'Date',
-    url: 'URL',
-  };
+const addFile = async () => {
+  if (files.value.length > 0) {
+    const publicURL = files.value[0];
+    const fileName = publicURL.split('/').pop();
+    const year = publicURL.split('/')[10];
+    const response = await fetch(publicURL);
+    const jsonData = await response.json();
 
-  return headersToDisplay[header] || header
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
+    const keys = Object.keys(jsonData);
+    const length = Object.keys(jsonData[keys[0]]).length;
+    const convertedData = {};
 
-// Function to export CSV
-function exportCSV() {
-  // Use Papa.unparse to convert JSON to CSV
-  const csv = Papa.unparse(csvData.value);
+    keys.forEach(key => {
+      convertedData[key] = [];
+      for (let index in jsonData[key]) {
+        if (jsonData[key].hasOwnProperty(index)) {
+          convertedData[key].push(jsonData[key][index]);
+        }
+      }
+    });
 
-  // Create a Blob from the CSV
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const listOfObjects = [];
+    for (let i = 0; i < length; i++) {
+      const obj = {};
+      keys.forEach(key => {
+        obj[key] = convertedData[key][i];
+      });
+      listOfObjects.push(obj);
+    }
 
-  // Create a link to download the Blob
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  const currentDate = new Date();
-  const timestamp = currentDate.toISOString().split('T')[0];
-  link.setAttribute('download', `exported_data_${timestamp}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+    file.value = listOfObjects;
+    competition.value = file.value[0].competition;
+    location.value = file.value[0].location;
+    date.value = file.value[0].date;
+    image_url.value = imageBaseUrl + "/" + year + '/' + fileName.replace('.json', '');
+  }
+};
 
+const saveFile = async () => {
+  if (file.value.length > 0) {
+    const jsonData = {
+      competition: [],
+      location: [],
+      date: [],
+      competitors_name: [],
+      country: [],
+      judging: [],
+      finals: [],
+      total: [],
+      place: [],
+      competition_type: []
+    };
+
+    file.value.forEach(competitor => {
+      jsonData.competition.push(competition.value || null);
+      jsonData.location.push(location.value || null);
+      jsonData.date.push(date.value || null);
+      jsonData.competitors_name.push(competitor.competitors_name || null);
+      jsonData.country.push(competitor.country || null);
+      jsonData.judging.push(competitor.judging || null);
+      jsonData.finals.push(competitor.finals || null);
+      jsonData.total.push(competitor.total || null);
+      jsonData.place.push(competitor.place || null);
+      jsonData.competition_type.push(competitor.competition_type || null);
+    });
+
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const publicURL = files.value[0];
+    const fileName = publicURL.split('/').pop();
+    const year = publicURL.split('/')[10];
+    const filePath = `jsons-clean/${year}/${fileName}`;
+
+    const { data, error } = await supabase.storage.from('pipeline').upload(filePath, blob, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+    if (error) {
+      console.error('Error uploading file:', error.message);
+    } else {
+      console.log('File uploaded successfully:', data);
+      resetData();
+      await myFetch();
+    }
+  }
+};
+
+const resetData = () => {
+  file.value = [];
+  files.value = [];
+  competition.value = '';
+  location.value = '';
+  date.value = '';
+  image_url.value = '';
+};
 </script>
-
-

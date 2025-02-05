@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxt/ui": "^2.18.7",
     "@nuxtjs/tailwindcss": "^6.12.1",
+    "@supabase/supabase-js": "^2.48.1",
     "danfojs-node": "^1.1.2",
     "nuxt": "^3.13.0",
     "papaparse": "^5.4.1",
