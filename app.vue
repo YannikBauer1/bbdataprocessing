@@ -134,7 +134,7 @@ const myFetch = async () => {
 
 const fetchData = async () => {
   const { data: subfolders, error: subfoldersError } = await supabase.storage.from("pipeline").list("jsons-fromGPT", {
-    limit: 100,
+    limit: 1000,
     offset: 0,
     sortBy: { column: 'name', order: 'asc' },
   });
@@ -142,14 +142,14 @@ const fetchData = async () => {
 
   for (const folder of subfolders) {
     let { data: fromGPTData, error: fromGPTError } = await supabase.storage.from("pipeline").list(`jsons-fromGPT/${folder.name}`, {
-      limit: 100,
+      limit: 1000,
       offset: 0,
       sortBy: { column: 'name', order: 'asc' },
     });
     if (fromGPTError) throw new Error(fromGPTError.message);
 
     let { data: cleanData, error: cleanError } = await supabase.storage.from("pipeline").list(`jsons-clean/${folder.name}`, {
-      limit: 100,
+      limit: 1000,
       offset: 0,
       sortBy: { column: 'name', order: 'asc' },
     });
